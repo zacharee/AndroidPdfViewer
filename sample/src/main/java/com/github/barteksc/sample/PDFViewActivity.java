@@ -41,7 +41,7 @@ import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 import com.github.barteksc.pdfviewer.listener.OnPageErrorListener;
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
-import com.shockwave.pdfium.PdfDocument;
+import io.legere.pdfiumandroid.PdfDocument;
 
 import java.util.List;
 
@@ -199,14 +199,13 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
     public String getFileName(Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
-            Cursor cursor = getContentResolver().query(uri, null, null, null, null);
-            try {
+            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
+                    int columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+
+                    if (columnIndex >= 0) {
+                        result = cursor.getString(columnIndex);
+                    }
                 }
             }
         }
@@ -237,7 +236,7 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
             Log.e(TAG, String.format("%s %s, p %d", sep, b.getTitle(), b.getPageIdx()));
 
-            if (b.hasChildren()) {
+            if (!b.getChildren().isEmpty()) {
                 printBookmarksTree(b.getChildren(), sep + "-");
             }
         }
@@ -251,8 +250,9 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
      * @param grantResults Whether permissions granted
      */
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[],
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PERMISSION_CODE) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {

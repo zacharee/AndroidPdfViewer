@@ -18,15 +18,15 @@ package com.github.barteksc.pdfviewer;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.util.SizeF;
 import android.util.SparseBooleanArray;
 
 import com.github.barteksc.pdfviewer.exception.PageRenderingException;
 import com.github.barteksc.pdfviewer.util.FitPolicy;
 import com.github.barteksc.pdfviewer.util.PageSizeCalculator;
-import com.shockwave.pdfium.PdfDocument;
-import com.shockwave.pdfium.PdfiumCore;
-import com.shockwave.pdfium.util.Size;
-import com.shockwave.pdfium.util.SizeF;
+import io.legere.pdfiumandroid.PdfDocument;
+import io.legere.pdfiumandroid.PdfiumCore;
+import io.legere.pdfiumandroid.util.Size;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -98,7 +98,7 @@ class PdfFile {
         if (originalUserPages != null) {
             pagesCount = originalUserPages.length;
         } else {
-            pagesCount = pdfiumCore.getPageCount(pdfDocument);
+            pagesCount = pdfDocument.getPageCount();
         }
 
         for (int i = 0; i < pagesCount; i++) {
@@ -324,7 +324,7 @@ class PdfFile {
     public RectF mapRectToDevice(int pageIndex, int startX, int startY, int sizeX, int sizeY,
                                  RectF rect) {
         int docPage = documentPage(pageIndex);
-        return pdfiumCore.mapRectToDevice(pdfDocument, docPage, startX, startY, sizeX, sizeY, 0, rect);
+        return new RectF(pdfDocument.openPage(docPage).mapRectToDevice(startX, startY, sizeX, sizeY, 0, rect));
     }
 
     public void dispose() {
