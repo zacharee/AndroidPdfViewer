@@ -311,8 +311,15 @@ public class PDFView extends RelativeLayout {
         debugPaint = new Paint();
         debugPaint.setStyle(Style.STROKE);
 
-        pdfiumCore = new PdfiumCore(context, new Config());
+        pdfiumCore = new PdfiumCore(context, this.getPdfiumCoreConfig());
         setWillNotDraw(false);
+    }
+
+    /**
+     * Method to be override to customize pdfiumCore's config for subclass
+     */
+    protected Config getPdfiumCoreConfig() {
+        return new Config();
     }
 
     private void load(DocumentSource docSource, String password) {
