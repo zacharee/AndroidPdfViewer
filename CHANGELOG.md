@@ -1,3 +1,8 @@
+# 4.0.3
+* Update to Java 21.
+* Bump `minSdkVersion` to 23.
+* Fix build again.
+
 # 4.0.2
 * Add `createPdfiumCoreConfig()` method in PDFView.java that can be overridden to customize the config. (Thanks @r0b0t3d)
 * Update `androidx.core:core` to 1.16.0.
