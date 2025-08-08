@@ -54,9 +54,9 @@ internal class PdfFile(
      * else the largest page fits and other pages scale relatively
      */
     private val fitEachPage: Boolean,
-    private val isLandscape: Boolean
+    private val isLandscape: Boolean,
 ) {
-    var pagesCount: Int = 0
+    var pagesCount = originalUserPages?.size ?: pdfDocument.getPageCount()
         private set
 
     /** Original page sizes  */
@@ -90,12 +90,6 @@ internal class PdfFile(
     private var documentLength = 0f
 
     init {
-        setup(viewSize)
-    }
-
-    private fun setup(viewSize: Size) {
-        pagesCount = originalUserPages?.size ?: pdfDocument.getPageCount()
-
         for (i in 0..<pagesCount) {
             val pageSize = pdfiumCore.getPageSize(pdfDocument, documentPage(i))
             if (pageSize.width > originalMaxWidthPageSize.width) {
