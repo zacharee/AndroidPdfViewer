@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
+var libraryVersion = "4.0.3"
+
 android {
     compileSdk 36
 
@@ -9,18 +11,40 @@ android {
         minSdkVersion 23
         targetSdkVersion 36
         versionCode 1
-        versionName "4.0.3"
+        versionName libraryVersion
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
     }
+
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+        }
+    }
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.zacharee'
+            artifactId = 'AndroidPdfViewer'
+            version = libraryVersion
+
+            println(components)
+
+            afterEvaluate {
+                from components.release
+            }
+        }
     }
 }
 
