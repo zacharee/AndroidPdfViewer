@@ -80,14 +80,13 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.pickFile:
-                pickFile();
+        if (item.getItemId() == R.id.pickFile) {
+            pickFile();
 
-                break;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     private void initViews() {
