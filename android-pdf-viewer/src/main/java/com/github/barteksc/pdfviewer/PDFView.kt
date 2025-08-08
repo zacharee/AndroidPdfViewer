@@ -29,7 +29,6 @@ import android.graphics.PointF
 import android.graphics.Rect
 import android.graphics.RectF
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.HandlerThread
 import android.util.AttributeSet
 import android.util.Log
@@ -65,6 +64,12 @@ import io.legere.pdfiumandroid.PdfDocument
 import io.legere.pdfiumandroid.PdfiumCore
 import io.legere.pdfiumandroid.util.Config
 import io.legere.pdfiumandroid.util.Size
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.InputStream
 
@@ -160,11 +165,6 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
      * Current state of the view
      */
     private var state = State.DEFAULT
-
-    /**
-     * Async task used during the loading phase to decode a PDF document
-     */
-    private var decodingAsyncTask: DecodingAsyncTask? = null
 
     /**
      * The thread [.renderingHandler] will run on
@@ -295,6 +295,15 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
      */
     private var waitingDocumentConfigurator: Configurator? = null
 
+    private var coroutineScope: CoroutineScope = MainScope()
+        get() {
+            if (!field.isActive) {
+                field = MainScope()
+            }
+
+            return field
+        }
+
     /**
      * Construct the initial view
      */
@@ -315,9 +324,29 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
         check(this.isRecycled) { "Don't call load on a PDF View without recycling it first." }
 
         this.isRecycled = false
-        // Start decoding document
-        decodingAsyncTask = DecodingAsyncTask(docSource, password, userPages, this, pdfiumCore)
-        decodingAsyncTask?.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR)
+
+        coroutineScope.launch(Dispatchers.IO) {
+            try {
+                val pdfDocument = docSource.createDocument(context, pdfiumCore, password)
+                val pdfFile = PdfFile(
+                    pdfiumCore,
+                    pdfDocument,
+                    pageFitPolicy,
+                    Size(width, height),
+                    userPages,
+                    isOnDualPageMode,
+                    isSwipeVertical,
+                    spacingPx,
+                    isAutoSpacingEnabled,
+                    isFitEachPage,
+                    isOnLandscapeOrientation,
+                )
+
+                loadComplete(pdfFile)
+            } catch (e: Throwable) {
+                loadError(e)
+            }
+        }
     }
 
     /**
@@ -455,7 +484,6 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
         // Stop tasks
         renderingHandler?.stop()
         renderingHandler?.removeMessages(RenderingHandler.MSG_RENDER_TASK)
-        decodingAsyncTask?.cancel(true)
 
         // Clear caches
         cacheManager.recycle()
@@ -476,6 +504,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
         this.isRecycled = true
         callbacks = Callbacks()
         state = State.DEFAULT
+        coroutineScope.cancel()
     }
 
     /**

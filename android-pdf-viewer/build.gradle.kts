@@ -61,6 +61,7 @@ publishing {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlin.stdlib)
+    implementation(libs.kotlinx.coroutines.android)
 
     api(libs.pdfiumandroid)
     coreLibraryDesugaring(libs.desugar.jdk.libs)
