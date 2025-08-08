@@ -26,7 +26,7 @@ class PagePart(
     @JvmField val renderedBitmap: Bitmap?,
     @JvmField val pageRelativeBounds: RectF,
     val isThumbnail: Boolean,
-    @JvmField var cacheOrder: Int
+    @JvmField var cacheOrder: Int,
 ) {
     override fun equals(other: Any?): Boolean {
         if (other !is PagePart) {

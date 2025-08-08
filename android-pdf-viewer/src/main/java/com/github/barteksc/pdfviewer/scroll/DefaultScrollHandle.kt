@@ -85,7 +85,7 @@ open class DefaultScrollHandle @JvmOverloads constructor(
     }
 
     override fun destroyLayout() {
-        pdfView!!.removeView(this)
+        pdfView?.removeView(this)
     }
 
     override fun setScroll(position: Float) {

@@ -60,25 +60,21 @@ internal class CacheManager {
 
     private fun makeAFreeSpace() {
         synchronized(passiveActiveLock) {
-            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE &&
-                !passiveCache.isEmpty()
-            ) {
+            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE && !passiveCache.isEmpty()) {
                 val part = passiveCache.poll()
-                part!!.renderedBitmap!!.recycle()
+                part?.renderedBitmap?.recycle()
             }
-            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE &&
-                !activeCache.isEmpty()
-            ) {
+            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE && !activeCache.isEmpty()) {
                 activeCache.poll()?.renderedBitmap?.recycle()
             }
         }
     }
 
-    fun cacheThumbnail(part: PagePart?) {
+    fun cacheThumbnail(part: PagePart) {
         synchronized(thumbnails) {
             // If cache too big, remove and recycle
             while (thumbnails.size >= THUMBNAILS_CACHE_SIZE) {
-                thumbnails.removeAt(0).renderedBitmap!!.recycle()
+                thumbnails.removeAt(0).renderedBitmap?.recycle()
             }
 
             // Then add thumbnail
@@ -89,14 +85,14 @@ internal class CacheManager {
     fun upPartIfContained(page: Int, pageRelativeBounds: RectF, toOrder: Int): Boolean {
         val fakePart = PagePart(page, null, pageRelativeBounds, false, 0)
 
-        val found: PagePart?
         synchronized(passiveActiveLock) {
-            if ((find(passiveCache, fakePart).also { found = it }) != null) {
+            find(passiveCache, fakePart)?.let { found ->
                 passiveCache.remove(found)
-                found!!.cacheOrder = toOrder
+                found.cacheOrder = toOrder
                 activeCache.offer(found)
                 return true
             }
+
             return find(activeCache, fakePart) != null
         }
     }
@@ -119,14 +115,14 @@ internal class CacheManager {
     /**
      * Add part if it doesn't exist, recycle bitmap otherwise
      */
-    private fun addWithoutDuplicates(collection: MutableCollection<PagePart>, newPart: PagePart?) {
+    private fun addWithoutDuplicates(collection: MutableCollection<PagePart>, newPart: PagePart) {
         for (part in collection) {
             if (part == newPart) {
                 newPart.renderedBitmap?.recycle()
                 return
             }
         }
-        collection.add(newPart!!)
+        collection.add(newPart)
     }
 
     val pageParts: List<PagePart>
@@ -148,17 +144,17 @@ internal class CacheManager {
     fun recycle() {
         synchronized(passiveActiveLock) {
             for (part in passiveCache) {
-                part.renderedBitmap!!.recycle()
+                part.renderedBitmap?.recycle()
             }
             passiveCache.clear()
             for (part in activeCache) {
-                part.renderedBitmap!!.recycle()
+                part.renderedBitmap?.recycle()
             }
             activeCache.clear()
         }
         synchronized(thumbnails) {
             for (part in thumbnails) {
-                part.renderedBitmap!!.recycle()
+                part.renderedBitmap?.recycle()
             }
             thumbnails.clear()
         }

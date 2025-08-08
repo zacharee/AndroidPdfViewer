@@ -84,8 +84,8 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
 
     @Throws(PageRenderingException::class)
     private fun proceed(renderingTask: RenderingTask): PagePart? {
-        val pdfFile = pdfView.pdfFile
-        pdfFile!!.openPage(renderingTask.page)
+        val pdfFile = pdfView.pdfFile ?: return null
+        pdfFile.openPage(renderingTask.page)
 
         val w = renderingTask.width.roundToInt()
         val h = renderingTask.height.roundToInt()
@@ -99,7 +99,7 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
             render = createBitmap(
                 w,
                 h,
-                if (renderingTask.bestQuality) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565
+                if (renderingTask.bestQuality) Bitmap.Config.ARGB_8888 else Bitmap.Config.RGB_565,
             )
         } catch (e: IllegalArgumentException) {
             Log.e(TAG, "Cannot create bitmap", e)
@@ -111,13 +111,13 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
             render,
             renderingTask.page,
             roundedRenderBounds,
-            renderingTask.annotationRendering
+            renderingTask.annotationRendering,
         )
 
         return PagePart(
             renderingTask.page, render,
             renderingTask.bounds, renderingTask.thumbnail,
-            renderingTask.cacheOrder
+            renderingTask.cacheOrder,
         )
     }
 

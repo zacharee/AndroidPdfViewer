@@ -43,35 +43,38 @@ internal class AnimationManager(private val pdfView: PDFView) {
 
     fun startXAnimation(xFrom: Float, xTo: Float) {
         stopAll()
-        animation = ValueAnimator.ofFloat(xFrom, xTo)
-        val xAnimation = XAnimation()
-        animation!!.interpolator = DecelerateInterpolator()
-        animation!!.addUpdateListener(xAnimation)
-        animation!!.addListener(xAnimation)
-        animation!!.setDuration(400)
-        animation!!.start()
+        animation = ValueAnimator.ofFloat(xFrom, xTo).also { animation ->
+            val xAnimation = XAnimation()
+            animation.interpolator = DecelerateInterpolator()
+            animation.addUpdateListener(xAnimation)
+            animation.addListener(xAnimation)
+            animation.setDuration(400)
+            animation.start()
+        }
     }
 
     fun startYAnimation(yFrom: Float, yTo: Float) {
         stopAll()
-        animation = ValueAnimator.ofFloat(yFrom, yTo)
-        val yAnimation = YAnimation()
-        animation!!.interpolator = DecelerateInterpolator()
-        animation!!.addUpdateListener(yAnimation)
-        animation!!.addListener(yAnimation)
-        animation!!.setDuration(400)
-        animation!!.start()
+        animation = ValueAnimator.ofFloat(yFrom, yTo)?.also { animation ->
+            val yAnimation = YAnimation()
+            animation.interpolator = DecelerateInterpolator()
+            animation.addUpdateListener(yAnimation)
+            animation.addListener(yAnimation)
+            animation.setDuration(400)
+            animation.start()
+        }
     }
 
     fun startZoomAnimation(centerX: Float, centerY: Float, zoomFrom: Float, zoomTo: Float) {
         stopAll()
-        animation = ValueAnimator.ofFloat(zoomFrom, zoomTo)
-        animation!!.interpolator = DecelerateInterpolator()
-        val zoomAnim = ZoomAnimation(centerX, centerY)
-        animation!!.addUpdateListener(zoomAnim)
-        animation!!.addListener(zoomAnim)
-        animation!!.setDuration(400)
-        animation!!.start()
+        animation = ValueAnimator.ofFloat(zoomFrom, zoomTo).also { animation ->
+            val zoomAnim = ZoomAnimation(centerX, centerY)
+            animation.interpolator = DecelerateInterpolator()
+            animation.addUpdateListener(zoomAnim)
+            animation.addListener(zoomAnim)
+            animation.setDuration(400)
+            animation.start()
+        }
     }
 
     fun startFlingAnimation(
@@ -111,10 +114,8 @@ internal class AnimationManager(private val pdfView: PDFView) {
     }
 
     fun stopAll() {
-        if (animation != null) {
-            animation!!.cancel()
-            animation = null
-        }
+        animation?.cancel()
+        animation = null
         stopFling()
     }
 

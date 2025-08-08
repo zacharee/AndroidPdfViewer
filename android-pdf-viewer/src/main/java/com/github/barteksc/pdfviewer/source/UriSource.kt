@@ -28,7 +28,7 @@ class UriSource(private val uri: Uri) : DocumentSource {
         core: PdfiumCore,
         password: String?,
     ): PdfDocument {
-        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
-        return core.newDocument(pfd!!, password)
+        val pfd = context.contentResolver.openFileDescriptor(uri, "r") ?: throw IOException("Unable to open FileDescriptor for $uri")
+        return core.newDocument(pfd, password)
     }
 }

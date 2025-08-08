@@ -88,8 +88,8 @@ open class Callbacks {
     }
 
     fun callOnPageError(page: Int, error: Throwable?): Boolean {
-        if (onPageErrorListener != null) {
-            onPageErrorListener!!.onPageError(page, error)
+        onPageErrorListener?.let { onPageErrorListener ->
+            onPageErrorListener.onPageError(page, error)
             return true
         }
         return false
@@ -124,7 +124,7 @@ open class Callbacks {
     }
 
     fun callOnTap(event: MotionEvent): Boolean {
-        return onTapListener != null && onTapListener!!.onTap(event)
+        return onTapListener?.onTap(event) == true
     }
 
     fun setOnLongPress(onLongPressListener: OnLongPressListener?) {

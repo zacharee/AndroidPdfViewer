@@ -29,9 +29,9 @@ class PageSizeCalculator(
     private val viewSize: Size,
     private val fitEachPage: Boolean,
 ) {
-    var optimalMaxWidthPageSize: SizeF? = null
+    var optimalMaxWidthPageSize: SizeF = SizeF(0f, 0f)
         private set
-    var optimalMaxHeightPageSize: SizeF? = null
+    var optimalMaxHeightPageSize: SizeF = SizeF(0f, 0f)
         private set
     private var widthRatio = 0f
     private var heightRatio = 0f
@@ -64,10 +64,10 @@ class PageSizeCalculator(
                 optimalMaxHeightPageSize =
                     fitHeight(originalMaxHeightPageSize, viewSize.height.toFloat())
                 heightRatio =
-                    optimalMaxHeightPageSize!!.height / originalMaxHeightPageSize.height
+                    optimalMaxHeightPageSize.height / originalMaxHeightPageSize.height
                 optimalMaxWidthPageSize = fitHeight(
                     originalMaxWidthPageSize,
-                    originalMaxWidthPageSize.height * heightRatio
+                    originalMaxWidthPageSize.height * heightRatio,
                 )
             }
 
@@ -75,31 +75,31 @@ class PageSizeCalculator(
                 val localOptimalMaxWidth = fitBoth(
                     originalMaxWidthPageSize,
                     viewSize.width.toFloat(),
-                    viewSize.height.toFloat()
+                    viewSize.height.toFloat(),
                 )
                 val localWidthRatio =
                     localOptimalMaxWidth.width / originalMaxWidthPageSize.width
                 this.optimalMaxHeightPageSize = fitBoth(
                     originalMaxHeightPageSize, originalMaxHeightPageSize.width * localWidthRatio,
-                    viewSize.height.toFloat()
+                    viewSize.height.toFloat(),
                 )
                 heightRatio =
-                    optimalMaxHeightPageSize!!.height / originalMaxHeightPageSize.height
+                    optimalMaxHeightPageSize.height / originalMaxHeightPageSize.height
                 optimalMaxWidthPageSize = fitBoth(
                     originalMaxWidthPageSize,
                     viewSize.width.toFloat(),
-                    originalMaxWidthPageSize.height * heightRatio
+                    originalMaxWidthPageSize.height * heightRatio,
                 )
-                widthRatio = optimalMaxWidthPageSize!!.width / originalMaxWidthPageSize.width
+                widthRatio = optimalMaxWidthPageSize.width / originalMaxWidthPageSize.width
             }
 
             else -> {
                 optimalMaxWidthPageSize =
                     fitWidth(originalMaxWidthPageSize, viewSize.width.toFloat())
-                widthRatio = optimalMaxWidthPageSize!!.width / originalMaxWidthPageSize.width
+                widthRatio = optimalMaxWidthPageSize.width / originalMaxWidthPageSize.width
                 optimalMaxHeightPageSize = fitWidth(
                     originalMaxHeightPageSize,
-                    originalMaxHeightPageSize.width * widthRatio
+                    originalMaxHeightPageSize.width * widthRatio,
                 )
             }
         }

@@ -235,7 +235,7 @@ internal class DragPinchManager(
 
         val minX: Float
         val minY: Float
-        val pdfFile = pdfView.pdfFile!!
+        val pdfFile = pdfView.pdfFile ?: return false
         if (pdfView.isSwipeVertical) {
             minX = -(pdfView.toCurrentScale(pdfFile.maxPageWidth) - pdfView.width)
             minY = -(pdfFile.getDocLen(pdfView.zoom) - pdfView.height)
@@ -255,7 +255,7 @@ internal class DragPinchManager(
         val xOffset = pdfView.currentXOffset.toInt()
         val yOffset = pdfView.currentYOffset.toInt()
 
-        val pdfFile = pdfView.pdfFile!!
+        val pdfFile = pdfView.pdfFile ?: return
 
         val pageStart = -pdfFile.getPageOffset(pdfView.currentPage, pdfView.zoom)
         val pageEnd = pageStart - pdfFile.getPageLength(pdfView.currentPage, pdfView.zoom)

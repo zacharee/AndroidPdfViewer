@@ -32,8 +32,8 @@ import io.legere.pdfiumandroid.util.Size
 import kotlin.math.max
 
 internal class PdfFile(
-    private val pdfiumCore: PdfiumCore?,
-    private var pdfDocument: PdfDocument?,
+    private val pdfiumCore: PdfiumCore,
+    private var pdfDocument: PdfDocument,
     private val pageFitPolicy: FitPolicy,
     viewSize: Size,
     /**
@@ -94,14 +94,10 @@ internal class PdfFile(
     }
 
     private fun setup(viewSize: Size) {
-        pagesCount = if (originalUserPages != null) {
-            originalUserPages!!.size
-        } else {
-            pdfDocument!!.getPageCount()
-        }
+        pagesCount = originalUserPages?.size ?: pdfDocument.getPageCount()
 
         for (i in 0..<pagesCount) {
-            val pageSize = pdfiumCore!!.getPageSize(pdfDocument!!, documentPage(i))
+            val pageSize = pdfiumCore.getPageSize(pdfDocument, documentPage(i))
             if (pageSize.width > originalMaxWidthPageSize.width) {
                 originalMaxWidthPageSize = pageSize
             }
@@ -338,10 +334,7 @@ internal class PdfFile(
     }
 
     fun dispose() {
-        pdfDocument?.close()
-
-        pdfDocument = null
-        originalUserPages = null
+        pdfDocument.close()
     }
 
     /**
