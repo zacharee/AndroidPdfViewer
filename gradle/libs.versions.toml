@@ -1,0 +1,19 @@
+[versions]
+agp = '8.11.1'
+appcompat = "1.7.1"
+coreKtx = "1.16.0"
+desugar_jdk_libs = "2.1.5"
+kotlin = "2.1.20"
+pdfiumandroid = "1.0.33"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+desugar_jdk_libs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+pdfiumandroid = { module = "io.legere:pdfiumandroid", version.ref = "pdfiumandroid" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

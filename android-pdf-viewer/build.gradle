@@ -1,11 +1,10 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id 'kotlin-android'
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.androidLibrary)
+    id("maven-publish")
 }
-
-apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
 
 var libraryVersion = "4.0.3"
 
@@ -51,8 +50,6 @@ publishing {
             artifactId = 'AndroidPdfViewer'
             version = libraryVersion
 
-            println(components)
-
             afterEvaluate {
                 from components.release
             }
@@ -61,9 +58,9 @@ publishing {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.16.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
+    implementation libs.androidx.core.ktx
+    implementation libs.kotlin.stdlib
 
-    api 'io.legere:pdfiumandroid:1.0.33'
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+    api libs.pdfiumandroid
+    coreLibraryDesugaring libs.desugar.jdk.libs
 }

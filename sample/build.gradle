@@ -1,10 +1,9 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id 'kotlin-android'
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.androidApplication)
 }
-
-apply plugin: 'com.android.application'
 
 android {
     compileSdk 36
@@ -46,8 +45,8 @@ java {
 
 dependencies {
     implementation project(':android-pdf-viewer')
-    implementation 'androidx.core:core-ktx:1.16.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+    implementation libs.androidx.core.ktx
+    implementation libs.kotlin.stdlib
+    implementation libs.androidx.appcompat
+    coreLibraryDesugaring libs.desugar.jdk.libs
 }
