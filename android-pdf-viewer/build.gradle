@@ -13,5 +13,5 @@ android {
 
 dependencies {
     implementation 'androidx.core:core:1.12.0'
-    api 'io.legere:pdfiumandroid:1.0.19'
+    api 'io.legere:pdfiumandroid:1.0.33'
 }
