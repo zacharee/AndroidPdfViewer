@@ -1,3 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id 'kotlin-android'
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
@@ -17,6 +23,12 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21
         targetCompatibility JavaVersion.VERSION_21
+    }
+
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_21)
+        }
     }
 
     publishing {
@@ -49,7 +61,9 @@ publishing {
 }
 
 dependencies {
-    implementation 'androidx.core:core:1.16.0'
+    implementation 'androidx.core:core-ktx:1.16.0'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.20"
+
     api 'io.legere:pdfiumandroid:1.0.33'
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
 }
