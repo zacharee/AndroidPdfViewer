@@ -22,13 +22,14 @@ import android.graphics.RectF
 import com.github.barteksc.pdfviewer.util.Constants
 import com.github.barteksc.pdfviewer.util.Constants.Cache.CACHE_SIZE
 import com.github.barteksc.pdfviewer.util.Constants.PRELOAD_OFFSET
-import com.github.barteksc.pdfviewer.util.MathUtils.ceil
-import com.github.barteksc.pdfviewer.util.MathUtils.floor
-import com.github.barteksc.pdfviewer.util.MathUtils.max
-import com.github.barteksc.pdfviewer.util.MathUtils.min
 import com.github.barteksc.pdfviewer.util.Util.getDP
 import java.util.LinkedList
 import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 internal class PagesLoader(private val pdfView: PDFView) {
     private var cacheOrder = 0
@@ -87,8 +88,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
         val ratioY = 1f / size.height
         val partHeight = (Constants.PART_SIZE * ratioY) / pdfView.zoom
         val partWidth = (Constants.PART_SIZE * ratioX) / pdfView.zoom
-        grid.rows = ceil(1f / partHeight)
-        grid.cols = ceil(1f / partWidth)
+        grid.rows = ceil(1f / partHeight).roundToInt()
+        grid.cols = ceil(1f / partWidth).roundToInt()
     }
 
     private fun calculatePartSize(grid: GridSize) {
@@ -206,8 +207,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
                             pdfView.zoom,
                         )
                     ) / rowHeight
-                )
-                range.leftTop.col = floor(min(pageFirstXOffset - secondaryOffset, 0f) / colWidth)
+                ).roundToInt()
+                range.leftTop.col = floor(min(pageFirstXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
 
                 range.rightBottom.row = ceil(
                     abs(
@@ -216,8 +217,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
                             pdfView.zoom,
                         )
                     ) / rowHeight
-                )
-                range.rightBottom.col = floor(min(pageLastXOffset - secondaryOffset, 0f) / colWidth)
+                ).roundToInt()
+                range.rightBottom.col = floor(min(pageLastXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
             } else {
                 range.leftTop.col = floor(
                     abs(
@@ -226,8 +227,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
                             pdfView.zoom,
                         )
                     ) / colWidth
-                )
-                range.leftTop.row = floor(min(pageFirstYOffset - secondaryOffset, 0f) / rowHeight)
+                ).roundToInt()
+                range.leftTop.row = floor(min(pageFirstYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
 
                 range.rightBottom.col = floor(
                     abs(
@@ -236,9 +237,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
                             pdfView.zoom,
                         )
                     ) / colWidth
-                )
-                range.rightBottom.row =
-                    floor(min(pageLastYOffset - secondaryOffset, 0f) / rowHeight)
+                ).roundToInt()
+                range.rightBottom.row = floor(min(pageLastYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
             }
 
             renderRanges.add(range)

@@ -57,7 +57,6 @@ import com.github.barteksc.pdfviewer.source.InputStreamSource
 import com.github.barteksc.pdfviewer.source.UriSource
 import com.github.barteksc.pdfviewer.util.Constants
 import com.github.barteksc.pdfviewer.util.FitPolicy
-import com.github.barteksc.pdfviewer.util.MathUtils.limit
 import com.github.barteksc.pdfviewer.util.SnapEdge
 import com.github.barteksc.pdfviewer.util.Util.getDP
 import io.legere.pdfiumandroid.PdfDocument
@@ -412,7 +411,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
             } else {
                 -currentXOffset / (pdfFile!!.getDocLen(zoom) - width)
             }
-            return limit(offset, 0f, 1f)
+            return offset.coerceIn(0f, 1f)
         }
         set(progress) {
             setPositionOffset(progress, true)

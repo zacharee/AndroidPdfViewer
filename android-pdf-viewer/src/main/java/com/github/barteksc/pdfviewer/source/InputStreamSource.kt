@@ -29,6 +29,6 @@ class InputStreamSource(private val inputStream: InputStream) : DocumentSource {
         core: PdfiumCore,
         password: String?,
     ): PdfDocument {
-        return core.newDocument(Util.toByteArray(inputStream), password)
+        return core.newDocument(inputStream.use { it.readBytes() }, password)
     }
 }
