@@ -7,7 +7,7 @@ plugins {
     id("maven-publish")
 }
 
-val libraryVersion = "4.0.3"
+val javaVersion: JvmTarget by rootProject.extra
 
 android {
     compileSdk = 36
@@ -19,13 +19,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.toVersion(javaVersion.target)
+        targetCompatibility = JavaVersion.toVersion(javaVersion.target)
     }
 
     kotlin {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(javaVersion)
         }
     }
 
@@ -38,13 +38,15 @@ android {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(javaVersion.target)
     }
 }
 
 publishing {
     publications {
         create<MavenPublication>("release") {
+            val libraryVersion: String by rootProject.extra
+
             groupId = "com.github.zacharee"
             artifactId = "AndroidPdfViewer"
             version = libraryVersion
