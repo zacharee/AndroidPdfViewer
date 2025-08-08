@@ -27,7 +27,7 @@ interface OnPageScrollListener {
      * Called on every move while scrolling
      *
      * @param page current page index
-     * @param positionOffset see [com.github.barteksc.pdfviewer.PDFView.getPositionOffset]
+     * @param positionOffset see [com.github.barteksc.pdfviewer.PDFView.positionOffset]
      */
     fun onPageScrolled(page: Int, positionOffset: Float)
 }
