@@ -1,242 +1,222 @@
 /**
  * Copyright 2016 Bartosz Schiller
- * <p/>
+ *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.sample;
+package com.github.barteksc.sample
 
-import android.content.ActivityNotFoundException;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
-import android.database.Cursor;
-import android.graphics.Color;
-import android.net.Uri;
-import android.os.Bundle;
-import android.provider.OpenableColumns;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.Toast;
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.content.res.Configuration
+import android.graphics.Color
+import android.net.Uri
+import android.os.Bundle
+import android.provider.OpenableColumns
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.github.barteksc.pdfviewer.PDFView
+import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener
+import com.github.barteksc.pdfviewer.listener.OnPageChangeListener
+import com.github.barteksc.pdfviewer.listener.OnPageErrorListener
+import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
+import com.github.barteksc.pdfviewer.util.FitPolicy
+import io.legere.pdfiumandroid.PdfDocument
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadCompleteListener, OnPageErrorListener {
+    private lateinit var pdfView: PDFView
 
-import com.github.barteksc.pdfviewer.PDFView;
-import com.github.barteksc.pdfviewer.listener.OnLoadCompleteListener;
-import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
-import com.github.barteksc.pdfviewer.listener.OnPageErrorListener;
-import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle;
-import com.github.barteksc.pdfviewer.util.FitPolicy;
-import io.legere.pdfiumandroid.PdfDocument;
+    private var uri: Uri? = null
 
-import java.util.List;
+    private var pageNumber = 0
 
-public class PDFViewActivity extends AppCompatActivity implements OnPageChangeListener, OnLoadCompleteListener,
-        OnPageErrorListener {
+    private var pdfFileName: String? = null
 
-    private static final String TAG = PDFViewActivity.class.getSimpleName();
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-    private final static int REQUEST_CODE = 42;
-    public static final int PERMISSION_CODE = 42042;
-
-    public static final String SAMPLE_FILE = "sample.pdf";
-    public static final String READ_EXTERNAL_STORAGE = "android.permission.READ_EXTERNAL_STORAGE";
-
-    private PDFView pdfView;
-
-    private Uri uri;
-
-    private Integer pageNumber = 0;
-
-    private String pdfFileName;
-
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        initViews();
+        initViews()
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.options, menu);
-        return super.onCreateOptionsMenu(menu);
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        getMenuInflater().inflate(R.menu.options, menu)
+        return super.onCreateOptionsMenu(menu)
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.getItemId() == R.id.pickFile) {
-            pickFile();
+            pickFile()
 
-            return true;
+            return true
         }
 
-        return false;
+        return false
     }
 
-    private void initViews() {
-        pdfView = findViewById(R.id.pdfView);
+    private fun initViews() {
+        pdfView = findViewById(R.id.pdfView)
 
-        afterViews();
+        afterViews()
     }
 
-    void pickFile() {
-        int permissionCheck = ContextCompat.checkSelfPermission(this,
-                READ_EXTERNAL_STORAGE);
+    fun pickFile() {
+        val permissionCheck = ContextCompat.checkSelfPermission(
+            this,
+            READ_EXTERNAL_STORAGE
+        )
 
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{READ_EXTERNAL_STORAGE},
-                    PERMISSION_CODE
-            );
+                this,
+                arrayOf<String>(READ_EXTERNAL_STORAGE),
+                PERMISSION_CODE
+            )
 
-            return;
+            return
         }
 
-        launchPicker();
+        launchPicker()
     }
 
-    void launchPicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("application/pdf");
+    fun launchPicker() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.setType("application/pdf")
         try {
-            startActivityForResult(intent, REQUEST_CODE);
-        } catch (ActivityNotFoundException e) {
+            startActivityForResult(intent, REQUEST_CODE)
+        } catch (_: ActivityNotFoundException) {
             //alert user that file manager not working
-            Toast.makeText(this, R.string.toast_pick_file_error, Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.toast_pick_file_error, Toast.LENGTH_SHORT).show()
         }
     }
 
-    void afterViews() {
-        pdfView.setBackgroundColor(Color.LTGRAY);
+    fun afterViews() {
+        pdfView.setBackgroundColor(Color.LTGRAY)
         if (uri != null) {
-            displayFromUri(uri);
+            displayFromUri(uri!!)
         } else {
-            displayFromAsset(SAMPLE_FILE);
+            displayFromAsset(SAMPLE_FILE)
         }
-        setTitle(pdfFileName);
+        setTitle(pdfFileName)
     }
 
-    private void displayFromAsset(String assetFileName) {
-        boolean isLandscape = false;
-        int orientation = this.getResources().getConfiguration().orientation;
-        isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE;
-        pdfFileName = assetFileName;
+    private fun displayFromAsset(assetFileName: String) {
+        var isLandscape: Boolean
+        val orientation = resources.configuration.orientation
+        isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
+        pdfFileName = assetFileName
 
         pdfView.fromAsset(SAMPLE_FILE)
-                .defaultPage(pageNumber)
-                .onPageChange(this)
-                .enableAnnotationRendering(true)
-                .onLoad(this)
-                .landscapeOrientation(isLandscape)
-                .dualPageMode(false)
-                .scrollHandle(new DefaultScrollHandle(this))
-                .spacing(0) // in dp
-                .enableSwipe(true)
-                .swipeHorizontal(true)
-                .pageFling(true)
-                .fitEachPage(false)
-                .onPageError(this)
-                .pageFitPolicy(FitPolicy.BOTH)
-                .load();
+            .defaultPage(pageNumber)
+            .onPageChange(this)
+            .enableAnnotationRendering(true)
+            .onLoad(this)
+            .landscapeOrientation(isLandscape)
+            .dualPageMode(false)
+            .scrollHandle(DefaultScrollHandle(this))
+            .spacing(0) // in dp
+            .enableSwipe(true)
+            .swipeHorizontal(true)
+            .pageFling(true)
+            .fitEachPage(false)
+            .onPageError(this)
+            .pageFitPolicy(FitPolicy.BOTH)
+            .load()
     }
 
-    private void displayFromUri(Uri uri) {
-        pdfFileName = getFileName(uri);
+    private fun displayFromUri(uri: Uri) {
+        pdfFileName = getFileName(uri)
 
         pdfView.fromUri(uri)
-                .defaultPage(pageNumber)
-                .onPageChange(this)
-                .enableAnnotationRendering(true)
-                .onLoad(this)
-                .scrollHandle(new DefaultScrollHandle(this))
-                .spacing(0) // in dp
-                .dualPageMode(true)
-                .enableSwipe(true)
-                .swipeHorizontal(true)
-                .pageFling(true)
-                .onPageError(this)
-                .load();
+            .defaultPage(pageNumber)
+            .onPageChange(this)
+            .enableAnnotationRendering(true)
+            .onLoad(this)
+            .scrollHandle(DefaultScrollHandle(this))
+            .spacing(0) // in dp
+            .dualPageMode(true)
+            .enableSwipe(true)
+            .swipeHorizontal(true)
+            .pageFling(true)
+            .onPageError(this)
+            .load()
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
 
-        onResult(resultCode, data);
+        onResult(resultCode, data!!)
     }
 
-    public void onResult(int resultCode, Intent intent) {
+    fun onResult(resultCode: Int, intent: Intent) {
         if (resultCode == RESULT_OK) {
-            uri = intent.getData();
-            displayFromUri(uri);
+            uri = intent.data
+            displayFromUri(uri!!)
         }
     }
 
-    @Override
-    public void onPageChanged(int page, int pageCount) {
-        pageNumber = page;
-        setTitle(String.format("%s %s / %s", pdfFileName, page + 1, pageCount));
+    override fun onPageChanged(page: Int, pageCount: Int) {
+        pageNumber = page
+        setTitle(String.format("%s %s / %s", pdfFileName, page + 1, pageCount))
     }
 
-    public String getFileName(Uri uri) {
-        String result = null;
-        if (uri.getScheme().equals("content")) {
-            try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+    fun getFileName(uri: Uri): String {
+        var result: String? = null
+        if (uri.getScheme() == "content") {
+            getContentResolver().query(uri, null, null, null, null).use { cursor ->
                 if (cursor != null && cursor.moveToFirst()) {
-                    int columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                    val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
 
                     if (columnIndex >= 0) {
-                        result = cursor.getString(columnIndex);
+                        result = cursor.getString(columnIndex)
                     }
                 }
             }
         }
         if (result == null) {
-            result = uri.getLastPathSegment();
+            result = uri.getLastPathSegment()
         }
-        return result;
+        return result!!
     }
 
-    @Override
-    public void loadComplete(int nbPages) {
-        PdfDocument.Meta meta = pdfView.getDocumentMeta();
-        Log.e(TAG, "title = " + meta.getTitle());
-        Log.e(TAG, "author = " + meta.getAuthor());
-        Log.e(TAG, "subject = " + meta.getSubject());
-        Log.e(TAG, "keywords = " + meta.getKeywords());
-        Log.e(TAG, "creator = " + meta.getCreator());
-        Log.e(TAG, "producer = " + meta.getProducer());
-        Log.e(TAG, "creationDate = " + meta.getCreationDate());
-        Log.e(TAG, "modDate = " + meta.getModDate());
+    override fun loadComplete(nbPages: Int) {
+        val meta = pdfView.getDocumentMeta()
+        Log.e(TAG, "title = " + meta.title)
+        Log.e(TAG, "author = " + meta.author)
+        Log.e(TAG, "subject = " + meta.subject)
+        Log.e(TAG, "keywords = " + meta.keywords)
+        Log.e(TAG, "creator = " + meta.creator)
+        Log.e(TAG, "producer = " + meta.producer)
+        Log.e(TAG, "creationDate = " + meta.creationDate)
+        Log.e(TAG, "modDate = " + meta.modDate)
 
-        printBookmarksTree(pdfView.getTableOfContents(), "-");
-
+        printBookmarksTree(pdfView.getTableOfContents(), "-")
     }
 
-    public void printBookmarksTree(List<PdfDocument.Bookmark> tree, String sep) {
-        for (PdfDocument.Bookmark b : tree) {
+    fun printBookmarksTree(tree: MutableList<PdfDocument.Bookmark>, sep: String) {
+        for (b in tree) {
+            Log.e(TAG, String.format("%s %s, p %d", sep, b.title, b.pageIdx))
 
-            Log.e(TAG, String.format("%s %s, p %d", sep, b.getTitle(), b.getPageIdx()));
-
-            if (!b.getChildren().isEmpty()) {
-                printBookmarksTree(b.getChildren(), sep + "-");
+            if (!b.children.isEmpty()) {
+                printBookmarksTree(b.children, sep + "-")
             }
         }
     }
@@ -248,20 +228,31 @@ public class PDFViewActivity extends AppCompatActivity implements OnPageChangeLi
      * @param permissions  Permissions that requested
      * @param grantResults Whether permissions granted
      */
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String?>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_CODE) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                launchPicker();
+            if (grantResults.size > 0
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED
+            ) {
+                launchPicker()
             }
         }
     }
 
-    @Override
-    public void onPageError(int page, Throwable t) {
-        Log.e(TAG, "Cannot load page " + page);
+    override fun onPageError(page: Int, t: Throwable?) {
+        Log.e(TAG, "Cannot load page " + page)
+    }
+
+    companion object {
+        private val TAG: String = PDFViewActivity::class.java.getSimpleName()
+
+        private const val REQUEST_CODE = 42
+        const val PERMISSION_CODE: Int = 42042
+
+        const val SAMPLE_FILE: String = "sample.pdf"
+        const val READ_EXTERNAL_STORAGE: String = "android.permission.READ_EXTERNAL_STORAGE"
     }
 }
