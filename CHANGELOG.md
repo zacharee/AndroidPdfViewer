@@ -1,3 +1,17 @@
+# 4.0.2
+* Add `createPdfiumCoreConfig()` method in PDFView.java that can be overridden to customize the config. (Thanks @r0b0t3d)
+* Update `androidx.core:core` to 1.16.0.
+* Update `io.legere:pdfiumandroid` to 1.0.33.
+* Update `com.android.tools.build:gradle` to 8.11.1.
+* Update Gradle to 8.14.3.
+* Add missing `namespace` declarations.
+
+# 4.0.1
+* Fix build.
+
+## 4.0.0
+* Rebase library onto PdfiumAndroidKt.
+
 ## 3.2.0-beta.1 (2019-08-18)
 * Merge PR #714 with optimized page load
 * Merge PR #776 with fix for max & min zoom level
