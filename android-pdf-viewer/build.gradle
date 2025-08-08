@@ -27,4 +27,5 @@ java {
 dependencies {
     implementation 'androidx.core:core:1.16.0'
     api 'io.legere:pdfiumandroid:1.0.33'
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
 }
