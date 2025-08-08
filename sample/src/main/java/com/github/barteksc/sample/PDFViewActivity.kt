@@ -58,12 +58,12 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        getMenuInflater().inflate(R.menu.options, menu)
+        menuInflater.inflate(R.menu.options, menu)
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.getItemId() == R.id.pickFile) {
+        if (item.itemId == R.id.pickFile) {
             pickFile()
 
             return true
@@ -87,7 +87,7 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf<String>(READ_EXTERNAL_STORAGE),
+                arrayOf(READ_EXTERNAL_STORAGE),
                 PERMISSION_CODE
             )
 
@@ -180,8 +180,8 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
 
     fun getFileName(uri: Uri): String {
         var result: String? = null
-        if (uri.getScheme() == "content") {
-            getContentResolver().query(uri, null, null, null, null).use { cursor ->
+        if (uri.scheme == "content") {
+            contentResolver.query(uri, null, null, null, null).use { cursor ->
                 if (cursor != null && cursor.moveToFirst()) {
                     val columnIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
 
@@ -192,13 +192,13 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
             }
         }
         if (result == null) {
-            result = uri.getLastPathSegment()
+            result = uri.lastPathSegment
         }
         return result!!
     }
 
     override fun loadComplete(nbPages: Int) {
-        val meta = pdfView.getDocumentMeta()
+        val meta = pdfView.documentMeta!!
         Log.e(TAG, "title = " + meta.title)
         Log.e(TAG, "author = " + meta.author)
         Log.e(TAG, "subject = " + meta.subject)
@@ -208,15 +208,15 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
         Log.e(TAG, "creationDate = " + meta.creationDate)
         Log.e(TAG, "modDate = " + meta.modDate)
 
-        printBookmarksTree(pdfView.getTableOfContents(), "-")
+        printBookmarksTree(pdfView.tableOfContents, "-")
     }
 
-    fun printBookmarksTree(tree: MutableList<PdfDocument.Bookmark>, sep: String) {
+    fun printBookmarksTree(tree: List<PdfDocument.Bookmark>, sep: String) {
         for (b in tree) {
             Log.e(TAG, String.format("%s %s, p %d", sep, b.title, b.pageIdx))
 
             if (!b.children.isEmpty()) {
-                printBookmarksTree(b.children, sep + "-")
+                printBookmarksTree(b.children, "$sep-")
             }
         }
     }
@@ -234,16 +234,14 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_CODE) {
-            if (grantResults.size > 0
-                && grantResults[0] == PackageManager.PERMISSION_GRANTED
-            ) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 launchPicker()
             }
         }
     }
 
     override fun onPageError(page: Int, t: Throwable?) {
-        Log.e(TAG, "Cannot load page " + page)
+        Log.e(TAG, "Cannot load page $page")
     }
 
     companion object {

@@ -13,27 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.pdfviewer.source;
+package com.github.barteksc.pdfviewer.source
 
-import android.content.Context;
+import android.content.Context
+import com.github.barteksc.pdfviewer.util.Util
+import io.legere.pdfiumandroid.PdfDocument
+import io.legere.pdfiumandroid.PdfiumCore
+import java.io.IOException
+import java.io.InputStream
 
-import com.github.barteksc.pdfviewer.util.Util;
-import io.legere.pdfiumandroid.PdfDocument;
-import io.legere.pdfiumandroid.PdfiumCore;
-
-import java.io.IOException;
-import java.io.InputStream;
-
-public class InputStreamSource implements DocumentSource {
-
-    private InputStream inputStream;
-
-    public InputStreamSource(InputStream inputStream) {
-        this.inputStream = inputStream;
-    }
-
-    @Override
-    public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        return core.newDocument(Util.toByteArray(inputStream), password);
+class InputStreamSource(private val inputStream: InputStream) : DocumentSource {
+    @Throws(IOException::class)
+    override fun createDocument(
+        context: Context,
+        core: PdfiumCore,
+        password: String?,
+    ): PdfDocument {
+        return core.newDocument(Util.toByteArray(inputStream), password)
     }
 }

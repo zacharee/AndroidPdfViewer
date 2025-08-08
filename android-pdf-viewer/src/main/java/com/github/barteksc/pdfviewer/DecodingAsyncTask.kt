@@ -1,101 +1,89 @@
 /**
  * Copyright 2016 Bartosz Schiller
- * <p/>
+ *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.pdfviewer;
+package com.github.barteksc.pdfviewer
 
-import android.annotation.SuppressLint;
-import android.os.AsyncTask;
+import android.annotation.SuppressLint
+import android.os.AsyncTask
+import com.github.barteksc.pdfviewer.source.DocumentSource
+import io.legere.pdfiumandroid.PdfiumCore
+import io.legere.pdfiumandroid.util.Size
+import java.lang.ref.WeakReference
 
-import com.github.barteksc.pdfviewer.source.DocumentSource;
-import io.legere.pdfiumandroid.PdfDocument;
-import io.legere.pdfiumandroid.PdfiumCore;
-import io.legere.pdfiumandroid.util.Size;
+internal class DecodingAsyncTask(
+    private val docSource: DocumentSource,
+    private val password: String?,
+    private val userPages: IntArray?,
+    pdfView: PDFView?,
+    private val pdfiumCore: PdfiumCore
+) : AsyncTask<Void?, Void?, Throwable?>() {
+    private var cancelled = false
 
-import java.lang.ref.WeakReference;
+    private val pdfViewReference: WeakReference<PDFView?> = WeakReference<PDFView?>(pdfView)
 
-class DecodingAsyncTask extends AsyncTask<Void, Void, Throwable> {
-
-    private boolean cancelled;
-
-    private final WeakReference<PDFView> pdfViewReference;
-
-    private final PdfiumCore pdfiumCore;
-    private final String password;
-    private final DocumentSource docSource;
-    private final int[] userPages;
-    private PdfFile pdfFile;
-
-    DecodingAsyncTask(DocumentSource docSource, String password, int[] userPages, PDFView pdfView, PdfiumCore pdfiumCore) {
-        this.docSource = docSource;
-        this.userPages = userPages;
-        this.cancelled = false;
-        this.pdfViewReference = new WeakReference<>(pdfView);
-        this.password = password;
-        this.pdfiumCore = pdfiumCore;
-    }
+    private var pdfFile: PdfFile? = null
 
     @SuppressLint("WrongThread")
-    @Override
-    protected Throwable doInBackground(Void... params) {
+    override fun doInBackground(vararg params: Void?): Throwable? {
         try {
-            PDFView pdfView = pdfViewReference.get();
+            val pdfView = pdfViewReference.get()
             if (pdfView != null) {
-                PdfDocument pdfDocument = docSource.createDocument(pdfView.getContext(), pdfiumCore, password);
-                pdfFile = new PdfFile(
-                        pdfiumCore,
-                        pdfDocument,
-                        pdfView.getPageFitPolicy(),
-                        getViewSize(pdfView),
-                        userPages,
-                        pdfView.isOnDualPageMode(),
-                        pdfView.isSwipeVertical(),
-                        pdfView.getSpacingPx(),
-                        pdfView.isAutoSpacingEnabled(),
-                        pdfView.isFitEachPage(),
-                        pdfView.isOnLandscapeOrientation()
-                );
-                return null;
+                val pdfDocument = docSource.createDocument(pdfView.context, pdfiumCore, password)
+                pdfFile = PdfFile(
+                    pdfiumCore,
+                    pdfDocument,
+                    pdfView.pageFitPolicy,
+                    getViewSize(pdfView),
+                    userPages,
+                    pdfView.isOnDualPageMode,
+                    pdfView.isSwipeVertical,
+                    pdfView.spacingPx,
+                    pdfView.isAutoSpacingEnabled,
+                    pdfView.isFitEachPage,
+                    pdfView.isOnLandscapeOrientation,
+                )
+                return null
             } else {
-                return new NullPointerException("pdfView == null");
+                return NullPointerException("pdfView == null")
             }
-
-        } catch (Throwable t) {
-            return t;
+        } catch (t: Throwable) {
+            return t
         }
     }
 
-    private Size getViewSize(PDFView pdfView) {
-        return new Size(pdfView.getWidth(), pdfView.getHeight());
+    private fun getViewSize(pdfView: PDFView): Size {
+        return Size(pdfView.width, pdfView.height)
     }
 
-    @Override
-    protected void onPostExecute(Throwable t) {
-        PDFView pdfView = pdfViewReference.get();
+    override fun onPostExecute(t: Throwable?) {
+        val pdfView = pdfViewReference.get()
         if (pdfView != null) {
             if (t != null) {
-                pdfView.loadError(t);
-                return;
+                pdfView.loadError(t)
+                return
             }
             if (!cancelled) {
-                pdfView.loadComplete(pdfFile);
+                pdfView.loadComplete(pdfFile!!)
             }
         }
     }
 
-    @Override
-    protected void onCancelled() {
-        cancelled = true;
+    override fun onCancelled() {
+        cancelled = true
     }
 }

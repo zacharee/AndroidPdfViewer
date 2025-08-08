@@ -13,27 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.pdfviewer.source;
+package com.github.barteksc.pdfviewer.source
 
-import android.content.Context;
-import android.net.Uri;
-import android.os.ParcelFileDescriptor;
-import io.legere.pdfiumandroid.PdfDocument;
-import io.legere.pdfiumandroid.PdfiumCore;
+import android.content.Context
+import android.net.Uri
+import io.legere.pdfiumandroid.PdfDocument
+import io.legere.pdfiumandroid.PdfiumCore
+import java.io.IOException
 
-import java.io.IOException;
-
-public class UriSource implements DocumentSource {
-
-    private Uri uri;
-
-    public UriSource(Uri uri) {
-        this.uri = uri;
-    }
-
-    @Override
-    public PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException {
-        ParcelFileDescriptor pfd = context.getContentResolver().openFileDescriptor(uri, "r");
-        return core.newDocument(pfd, password);
+class UriSource(private val uri: Uri) : DocumentSource {
+    @Throws(IOException::class)
+    override fun createDocument(
+        context: Context,
+        core: PdfiumCore,
+        password: String?,
+    ): PdfDocument {
+        val pfd = context.contentResolver.openFileDescriptor(uri, "r")
+        return core.newDocument(pfd!!, password)
     }
 }

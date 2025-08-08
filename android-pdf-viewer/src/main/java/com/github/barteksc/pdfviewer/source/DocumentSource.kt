@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.pdfviewer.source;
+package com.github.barteksc.pdfviewer.source
 
-import android.content.Context;
-import io.legere.pdfiumandroid.PdfDocument;
-import io.legere.pdfiumandroid.PdfiumCore;
+import android.content.Context
+import io.legere.pdfiumandroid.PdfDocument
+import io.legere.pdfiumandroid.PdfiumCore
+import java.io.IOException
 
-import java.io.IOException;
-
-public interface DocumentSource {
-    PdfDocument createDocument(Context context, PdfiumCore core, String password) throws IOException;
+interface DocumentSource {
+    @Throws(IOException::class)
+    fun createDocument(context: Context, core: PdfiumCore, password: String?): PdfDocument
 }

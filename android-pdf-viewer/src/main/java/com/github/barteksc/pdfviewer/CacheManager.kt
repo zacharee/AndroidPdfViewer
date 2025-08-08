@@ -1,192 +1,186 @@
 /**
  * Copyright 2016 Bartosz Schiller
- * <p/>
+ *
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p/>
+ *
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
+ *
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.barteksc.pdfviewer;
+package com.github.barteksc.pdfviewer
 
-import android.graphics.RectF;
-import androidx.annotation.Nullable;
+import android.graphics.RectF
+import com.github.barteksc.pdfviewer.model.PagePart
+import com.github.barteksc.pdfviewer.util.Constants.Cache.CACHE_SIZE
+import com.github.barteksc.pdfviewer.util.Constants.Cache.THUMBNAILS_CACHE_SIZE
+import java.util.PriorityQueue
 
-import com.github.barteksc.pdfviewer.model.PagePart;
+internal class CacheManager {
+    private val passiveCache: PriorityQueue<PagePart>
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.PriorityQueue;
+    private val activeCache: PriorityQueue<PagePart>
 
-import static com.github.barteksc.pdfviewer.util.Constants.Cache.CACHE_SIZE;
-import static com.github.barteksc.pdfviewer.util.Constants.Cache.THUMBNAILS_CACHE_SIZE;
+    private val thumbnails: MutableList<PagePart>
 
-class CacheManager {
+    private val passiveActiveLock = Any()
 
-    private final PriorityQueue<PagePart> passiveCache;
+    private val orderComparator = PagePartComparator()
 
-    private final PriorityQueue<PagePart> activeCache;
-
-    private final List<PagePart> thumbnails;
-
-    private final Object passiveActiveLock = new Object();
-
-    private final PagePartComparator orderComparator = new PagePartComparator();
-
-    public CacheManager() {
-        activeCache = new PriorityQueue<>(CACHE_SIZE, orderComparator);
-        passiveCache = new PriorityQueue<>(CACHE_SIZE, orderComparator);
-        thumbnails = new ArrayList<>();
+    init {
+        activeCache = PriorityQueue<PagePart>(CACHE_SIZE, orderComparator)
+        passiveCache = PriorityQueue<PagePart>(CACHE_SIZE, orderComparator)
+        thumbnails = ArrayList<PagePart>()
     }
 
-    public void cachePart(PagePart part) {
-        synchronized (passiveActiveLock) {
+    fun cachePart(part: PagePart?) {
+        synchronized(passiveActiveLock) {
             // If cache too big, remove and recycle
-            makeAFreeSpace();
+            makeAFreeSpace()
 
             // Then add part
-            activeCache.offer(part);
+            activeCache.offer(part)
         }
     }
 
-    public void makeANewSet() {
-        synchronized (passiveActiveLock) {
-            passiveCache.addAll(activeCache);
-            activeCache.clear();
+    fun makeANewSet() {
+        synchronized(passiveActiveLock) {
+            passiveCache.addAll(activeCache)
+            activeCache.clear()
         }
     }
 
-    private void makeAFreeSpace() {
-        synchronized (passiveActiveLock) {
-            while ((activeCache.size() + passiveCache.size()) >= CACHE_SIZE &&
-                    !passiveCache.isEmpty()) {
-                PagePart part = passiveCache.poll();
-                part.getRenderedBitmap().recycle();
+    private fun makeAFreeSpace() {
+        synchronized(passiveActiveLock) {
+            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE &&
+                !passiveCache.isEmpty()
+            ) {
+                val part = passiveCache.poll()
+                part!!.renderedBitmap!!.recycle()
             }
-
-            while ((activeCache.size() + passiveCache.size()) >= CACHE_SIZE &&
-                    !activeCache.isEmpty()) {
-                activeCache.poll().getRenderedBitmap().recycle();
+            while ((activeCache.size + passiveCache.size) >= CACHE_SIZE &&
+                !activeCache.isEmpty()
+            ) {
+                activeCache.poll()?.renderedBitmap?.recycle()
             }
         }
     }
 
-    public void cacheThumbnail(PagePart part) {
-        synchronized (thumbnails) {
+    fun cacheThumbnail(part: PagePart?) {
+        synchronized(thumbnails) {
             // If cache too big, remove and recycle
-            while (thumbnails.size() >= THUMBNAILS_CACHE_SIZE) {
-                thumbnails.remove(0).getRenderedBitmap().recycle();
+            while (thumbnails.size >= THUMBNAILS_CACHE_SIZE) {
+                thumbnails.removeAt(0).renderedBitmap!!.recycle()
             }
 
             // Then add thumbnail
-            addWithoutDuplicates(thumbnails, part);
+            addWithoutDuplicates(thumbnails, part)
         }
-
     }
 
-    public boolean upPartIfContained(int page, RectF pageRelativeBounds, int toOrder) {
-        PagePart fakePart = new PagePart(page, null, pageRelativeBounds, false, 0);
+    fun upPartIfContained(page: Int, pageRelativeBounds: RectF, toOrder: Int): Boolean {
+        val fakePart = PagePart(page, null, pageRelativeBounds, false, 0)
 
-        PagePart found;
-        synchronized (passiveActiveLock) {
-            if ((found = find(passiveCache, fakePart)) != null) {
-                passiveCache.remove(found);
-                found.setCacheOrder(toOrder);
-                activeCache.offer(found);
-                return true;
+        val found: PagePart?
+        synchronized(passiveActiveLock) {
+            if ((find(passiveCache, fakePart).also { found = it }) != null) {
+                passiveCache.remove(found)
+                found!!.cacheOrder = toOrder
+                activeCache.offer(found)
+                return true
             }
-
-            return find(activeCache, fakePart) != null;
+            return find(activeCache, fakePart) != null
         }
     }
 
     /**
      * Return true if already contains the described PagePart
      */
-    public boolean containsThumbnail(int page, RectF pageRelativeBounds) {
-        PagePart fakePart = new PagePart(page, null, pageRelativeBounds, true, 0);
-        synchronized (thumbnails) {
-            for (PagePart part : thumbnails) {
-                if (part.equals(fakePart)) {
-                    return true;
+    fun containsThumbnail(page: Int, pageRelativeBounds: RectF): Boolean {
+        val fakePart = PagePart(page, null, pageRelativeBounds, true, 0)
+        synchronized(thumbnails) {
+            for (part in thumbnails) {
+                if (part == fakePart) {
+                    return true
                 }
             }
-            return false;
+            return false
         }
     }
 
     /**
      * Add part if it doesn't exist, recycle bitmap otherwise
      */
-    private void addWithoutDuplicates(Collection<PagePart> collection, PagePart newPart) {
-        for (PagePart part : collection) {
-            if (part.equals(newPart)) {
-                newPart.getRenderedBitmap().recycle();
-                return;
+    private fun addWithoutDuplicates(collection: MutableCollection<PagePart>, newPart: PagePart?) {
+        for (part in collection) {
+            if (part == newPart) {
+                newPart.renderedBitmap?.recycle()
+                return
             }
         }
-        collection.add(newPart);
+        collection.add(newPart!!)
     }
 
-    @Nullable
-    private static PagePart find(PriorityQueue<PagePart> vector, PagePart fakePart) {
-        for (PagePart part : vector) {
-            if (part.equals(fakePart)) {
-                return part;
+    val pageParts: List<PagePart>
+        get() {
+            synchronized(passiveActiveLock) {
+                val parts: MutableList<PagePart> =
+                    ArrayList(passiveCache)
+                parts.addAll(activeCache)
+                return parts
             }
         }
-        return null;
-    }
 
-    public List<PagePart> getPageParts() {
-        synchronized (passiveActiveLock) {
-            List<PagePart> parts = new ArrayList<>(passiveCache);
-            parts.addAll(activeCache);
-            return parts;
-        }
-    }
-
-    public List<PagePart> getThumbnails() {
-        synchronized (thumbnails) {
-            return thumbnails;
+    fun getThumbnails(): List<PagePart> {
+        synchronized(thumbnails) {
+            return thumbnails
         }
     }
 
-    public void recycle() {
-        synchronized (passiveActiveLock) {
-            for (PagePart part : passiveCache) {
-                part.getRenderedBitmap().recycle();
+    fun recycle() {
+        synchronized(passiveActiveLock) {
+            for (part in passiveCache) {
+                part.renderedBitmap!!.recycle()
             }
-            passiveCache.clear();
-            for (PagePart part : activeCache) {
-                part.getRenderedBitmap().recycle();
+            passiveCache.clear()
+            for (part in activeCache) {
+                part.renderedBitmap!!.recycle()
             }
-            activeCache.clear();
+            activeCache.clear()
         }
-        synchronized (thumbnails) {
-            for (PagePart part : thumbnails) {
-                part.getRenderedBitmap().recycle();
+        synchronized(thumbnails) {
+            for (part in thumbnails) {
+                part.renderedBitmap!!.recycle()
             }
-            thumbnails.clear();
-        }
-    }
-
-    class PagePartComparator implements Comparator<PagePart> {
-        @Override
-        public int compare(PagePart part1, PagePart part2) {
-            if (part1.getCacheOrder() == part2.getCacheOrder()) {
-                return 0;
-            }
-            return part1.getCacheOrder() > part2.getCacheOrder() ? 1 : -1;
+            thumbnails.clear()
         }
     }
 
+    internal class PagePartComparator : Comparator<PagePart> {
+        override fun compare(part1: PagePart, part2: PagePart): Int {
+            if (part1.cacheOrder == part2.cacheOrder) {
+                return 0
+            }
+            return if (part1.cacheOrder > part2.cacheOrder) 1 else -1
+        }
+    }
+
+    companion object {
+        private fun find(vector: PriorityQueue<PagePart>, fakePart: PagePart?): PagePart? {
+            for (part in vector) {
+                if (part.equals(fakePart)) {
+                    return part
+                }
+            }
+            return null
+        }
+    }
 }
