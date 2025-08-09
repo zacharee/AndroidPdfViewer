@@ -85,7 +85,7 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
     @Throws(PageRenderingException::class)
     private fun proceed(renderingTask: RenderingTask): PagePart? {
         val pdfFile = pdfView.pdfFile ?: return null
-        pdfFile.openPage(renderingTask.page)
+        val page = pdfFile.getOrOpenPage(renderingTask.page)
 
         val w = renderingTask.width.roundToInt()
         val h = renderingTask.height.roundToInt()
@@ -107,11 +107,13 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
         }
         calculateBounds(w, h, renderingTask.bounds)
 
-        pdfFile.renderPageBitmap(
-            render,
-            renderingTask.page,
-            roundedRenderBounds,
-            renderingTask.annotationRendering,
+        page.renderPageBitmap(
+            bitmap = render,
+            startX = roundedRenderBounds.left,
+            startY = roundedRenderBounds.top,
+            drawSizeX = roundedRenderBounds.width(),
+            drawSizeY = roundedRenderBounds.height(),
+            renderAnnot = renderingTask.annotationRendering,
         )
 
         return PagePart(

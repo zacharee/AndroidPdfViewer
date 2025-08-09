@@ -124,7 +124,7 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
         isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
         pdfFileName = assetFileName
 
-        pdfView.fromAsset(SAMPLE_FILE)
+        pdfView.fromAsset(assetFileName)
             .defaultPage(pageNumber)
             .onPageChange(this)
             .enableAnnotationRendering(true)

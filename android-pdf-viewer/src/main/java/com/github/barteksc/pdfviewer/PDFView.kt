@@ -61,6 +61,7 @@ import com.github.barteksc.pdfviewer.util.SnapEdge
 import com.github.barteksc.pdfviewer.util.Util.getDP
 import io.legere.pdfiumandroid.PdfDocument
 import io.legere.pdfiumandroid.PdfiumCore
+import io.legere.pdfiumandroid.util.AlreadyClosedBehavior
 import io.legere.pdfiumandroid.util.Config
 import io.legere.pdfiumandroid.util.Size
 import kotlinx.coroutines.CoroutineScope
@@ -316,7 +317,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
      * Method to be override to customize pdfiumCore's config for subclass
      */
     protected fun createPdfiumCoreConfig(): Config {
-        return Config()
+        return Config(alreadyClosedBehavior = AlreadyClosedBehavior.IGNORE)
     }
 
     private fun load(docSource: DocumentSource, password: String?, userPages: IntArray? = null) {
@@ -328,7 +329,6 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
             try {
                 val pdfDocument = docSource.createDocument(context, pdfiumCore, password)
                 val pdfFile = PdfFile(
-                    pdfiumCore,
                     pdfDocument,
                     pageFitPolicy,
                     Size(width, height),
@@ -339,6 +339,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
                     isAutoSpacingEnabled,
                     isFitEachPage,
                     isOnLandscapeOrientation,
+                    context.resources.displayMetrics.densityDpi,
                 )
 
                 loadComplete(pdfFile)
@@ -804,31 +805,33 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
      * Called when the PDF is loaded
      */
     internal fun loadComplete(pdfFile: PdfFile) {
-        state = State.LOADED
+        handler.post {
+            state = State.LOADED
 
-        this.pdfFile = pdfFile
+            this.pdfFile = pdfFile
 
-        if (renderingHandlerThread == null) {
-            renderingHandlerThread = HandlerThread("PDF renderer")
+            if (renderingHandlerThread == null) {
+                renderingHandlerThread = HandlerThread("PDF renderer")
+            }
+
+            if (!renderingHandlerThread!!.isAlive) {
+                renderingHandlerThread!!.start()
+            }
+
+            renderingHandler = RenderingHandler(renderingHandlerThread!!.getLooper(), this)
+            renderingHandler!!.start()
+
+            if (scrollHandle != null) {
+                scrollHandle!!.setupLayout(this)
+                isScrollHandleInit = true
+            }
+
+            dragPinchManager.enable()
+
+            callbacks.callOnLoadComplete(pdfFile.pagesCount)
+
+            jumpTo(defaultPage, false)
         }
-
-        if (!renderingHandlerThread!!.isAlive) {
-            renderingHandlerThread!!.start()
-        }
-
-        renderingHandler = RenderingHandler(renderingHandlerThread!!.getLooper(), this)
-        renderingHandler!!.start()
-
-        if (scrollHandle != null) {
-            scrollHandle!!.setupLayout(this)
-            isScrollHandleInit = true
-        }
-
-        dragPinchManager.enable()
-
-        callbacks.callOnLoadComplete(pdfFile.pagesCount)
-
-        jumpTo(defaultPage, false)
     }
 
     fun loadError(t: Throwable) {
@@ -969,10 +972,10 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
         val screenCenter: Float
         if (this.isSwipeVertical) {
             offset = currentYOffset
-            screenCenter = (height.toFloat()) / 2
+            screenCenter = (height.toFloat()) / 2f
         } else {
             offset = currentXOffset
-            screenCenter = (width.toFloat()) / 2
+            screenCenter = (width.toFloat()) / 2f
         }
 
         val page = pdfFile!!.getPageAtOffset(-(offset - screenCenter), zoom)

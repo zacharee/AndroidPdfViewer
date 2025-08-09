@@ -22,17 +22,15 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.SizeF
-import android.util.SparseBooleanArray
 import com.github.barteksc.pdfviewer.exception.PageRenderingException
 import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.github.barteksc.pdfviewer.util.PageSizeCalculator
 import io.legere.pdfiumandroid.PdfDocument
-import io.legere.pdfiumandroid.PdfiumCore
+import io.legere.pdfiumandroid.PdfPage
 import io.legere.pdfiumandroid.util.Size
 import kotlin.math.max
 
 internal class PdfFile(
-    private val pdfiumCore: PdfiumCore,
     private var pdfDocument: PdfDocument,
     private val pageFitPolicy: FitPolicy,
     viewSize: Size,
@@ -55,6 +53,7 @@ internal class PdfFile(
      */
     private val fitEachPage: Boolean,
     private val isLandscape: Boolean,
+    private val density: Int,
 ) {
     var pagesCount = originalUserPages?.size ?: pdfDocument.getPageCount()
         private set
@@ -66,7 +65,7 @@ internal class PdfFile(
     private val pageSizes: MutableList<SizeF> = ArrayList()
 
     /** Opened pages with indicator whether opening was successful  */
-    private val openedPages = SparseBooleanArray()
+    private val openedPages = LinkedHashMap<Int, PdfPage>()
 
     /** Page with maximum width  */
     private var originalMaxWidthPageSize = Size(0, 0)
@@ -81,17 +80,23 @@ internal class PdfFile(
     private var maxWidthPageSize: SizeF? = SizeF(0f, 0f)
 
     /** Calculated offsets for pages  */
-    private val pageOffsets: MutableList<Float?> = ArrayList()
+    private val pageOffsets: MutableList<Float> = ArrayList()
 
     /** Calculated auto spacing for pages  */
-    private val pageSpacing: MutableList<Float?> = ArrayList()
+    private val pageSpacing: MutableList<Float> = ArrayList()
 
     /** Calculated document length (width or height, depending on swipe mode)  */
     private var documentLength = 0f
 
     init {
+        setup(viewSize)
+    }
+
+    private fun setup(viewSize: Size) {
         for (i in 0..<pagesCount) {
-            val pageSize = pdfiumCore.getPageSize(pdfDocument, documentPage(i))
+            val pageSize = pdfDocument.openPage(documentPage(i)).use { page ->
+                page.getPageSize(density)
+            }
             if (pageSize.width > originalMaxWidthPageSize.width) {
                 originalMaxWidthPageSize = pageSize
             }
@@ -176,7 +181,7 @@ internal class PdfFile(
             val pageSize = pageSizes[i]
             length += if (isVertical) pageSize.height else pageSize.width
             if (autoSpacing) {
-                length += pageSpacing[i]!!
+                length += pageSpacing[i]
             } else if (i < this.pagesCount - 1) {
                 length += spacingPx.toFloat()
             }
@@ -191,14 +196,14 @@ internal class PdfFile(
             val pageSize = pageSizes[i]
             val size = if (isVertical) pageSize.height else pageSize.width
             if (autoSpacing) {
-                offset += pageSpacing[i]!! / 2f
+                offset += pageSpacing[i] / 2f
                 if (i == 0) {
                     offset -= spacingPx / 2f
                 } else if (i == this.pagesCount - 1) {
                     offset += spacingPx / 2f
                 }
                 pageOffsets.add(offset)
-                offset += size + pageSpacing[i]!! / 2f
+                offset += size + pageSpacing[i] / 2f
             } else {
                 pageOffsets.add(offset)
                 offset += size + spacingPx
@@ -219,7 +224,7 @@ internal class PdfFile(
     }
 
     fun getPageSpacing(pageIndex: Int, zoom: Float): Float {
-        val spacing = (if (autoSpacing) pageSpacing[pageIndex] else spacingPx.toFloat())!!
+        val spacing = (if (autoSpacing) pageSpacing[pageIndex] else spacingPx.toFloat())
         return spacing * zoom
     }
 
@@ -229,7 +234,7 @@ internal class PdfFile(
         if (docPage < 0) {
             return 0f
         }
-        return pageOffsets[pageIndex]!! * zoom
+        return pageOffsets[pageIndex] * zoom
     }
 
     /** Get secondary page offset, that is X for vertical scroll and Y for horizontal scroll  */
@@ -247,7 +252,8 @@ internal class PdfFile(
     fun getPageAtOffset(offset: Float, zoom: Float): Int {
         var currentPage = 0
         for (i in 0..<this.pagesCount) {
-            val off = pageOffsets[i]!! * zoom - getPageSpacing(i, zoom) / 2f
+            val off = pageOffsets[i] * zoom - getPageSpacing(i, zoom) / 2f
+
             if (off >= offset) {
                 break
             }
@@ -257,78 +263,64 @@ internal class PdfFile(
     }
 
     @Throws(PageRenderingException::class)
-    fun openPage(pageIndex: Int): Boolean {
+    fun getOrOpenPage(pageIndex: Int): PdfPage {
         val docPage = documentPage(pageIndex)
         if (docPage < 0) {
-            return false
+            throw IndexOutOfBoundsException("pageIndex $pageIndex mapped to docPage $docPage")
         }
 
         synchronized(lock) {
-            if (openedPages.indexOfKey(docPage) < 0) {
-                try {
-                    pdfiumCore!!.openPage(pdfDocument!!, docPage)
-                    openedPages.put(docPage, true)
-                    return true
-                } catch (e: Exception) {
-                    openedPages.put(docPage, false)
-                    throw PageRenderingException(pageIndex, e)
+            return openedPages[docPage] ?: try {
+                val page = pdfDocument.openPage(docPage)
+                openedPages[docPage] = page
+                page
+            } catch (e: Exception) {
+                openedPages.remove(docPage)
+                throw PageRenderingException(pageIndex, e)
+            } finally {
+                if (openedPages.size > 5) {
+                    openedPages.keys.take(openedPages.size - 5).forEach { pageKey ->
+                        openedPages.remove(pageKey)?.close()
+                    }
                 }
             }
-            return false
         }
     }
 
     fun pageHasError(pageIndex: Int): Boolean {
         val docPage = documentPage(pageIndex)
-        return !openedPages.get(docPage, false)
+        return !openedPages.containsKey(docPage)
     }
 
-    fun renderPageBitmap(
-        bitmap: Bitmap?,
-        pageIndex: Int,
-        bounds: Rect,
-        annotationRendering: Boolean
-    ) {
-        val docPage = documentPage(pageIndex)
-        pdfiumCore!!.renderPageBitmap(
-            pdfDocument!!, bitmap, docPage,
-            bounds.left, bounds.top, bounds.width(), bounds.height(), annotationRendering,
-        )
-    }
-
-    val metaData: PdfDocument.Meta?
+    val metaData: PdfDocument.Meta
         get() {
-            if (pdfDocument == null) {
-                return null
-            }
-            return pdfDocument!!.getDocumentMeta()
+            return pdfDocument.getDocumentMeta()
         }
 
     val bookmarks: List<PdfDocument.Bookmark>
         get() {
-            if (pdfDocument == null) {
-                return ArrayList()
-            }
-            return pdfDocument!!.getTableOfContents()
+            return pdfDocument.getTableOfContents()
         }
 
     fun getPageLinks(pageIndex: Int): List<PdfDocument.Link> {
-        val docPage = documentPage(pageIndex)
-        return pdfiumCore!!.getPageLinks(pdfDocument!!, docPage)
+        return getOrOpenPage(pageIndex).getPageLinks()
     }
 
     fun mapRectToDevice(
-        pageIndex: Int, startX: Int, startY: Int, sizeX: Int, sizeY: Int,
-        rect: RectF
+        pageIndex: Int,
+        startX: Int,
+        startY: Int,
+        sizeX: Int,
+        sizeY: Int,
+        rect: RectF,
     ): RectF {
-        val docPage = documentPage(pageIndex)
-        return RectF(
-            pdfDocument!!.openPage(docPage).mapRectToDevice(startX, startY, sizeX, sizeY, 0, rect)
-        )
+        return RectF(getOrOpenPage(pageIndex).mapRectToDevice(startX, startY, sizeX, sizeY, 0, rect))
     }
 
     fun dispose() {
         pdfDocument.close()
+        openedPages.forEach { (_, v) -> v.close() }
+        openedPages.clear()
     }
 
     /**

@@ -109,11 +109,11 @@ internal class PagesLoader(private val pdfView: PDFView) {
         lastXOffset: Float,
         lastYOffset: Float,
     ): MutableList<RenderRange> {
-        val fixedFirstXOffset = -max(firstXOffset, 0f)
-        val fixedFirstYOffset = -max(firstYOffset, 0f)
+        val fixedFirstXOffset = -min(firstXOffset, 0f)
+        val fixedFirstYOffset = -min(firstYOffset, 0f)
 
-        val fixedLastXOffset = -max(lastXOffset, 0f)
-        val fixedLastYOffset = -max(lastYOffset, 0f)
+        val fixedLastXOffset = -min(lastXOffset, 0f)
+        val fixedLastYOffset = -min(lastYOffset, 0f)
 
         val offsetFirst = if (pdfView.isSwipeVertical) fixedFirstYOffset else fixedFirstXOffset
         val offsetLast = if (pdfView.isSwipeVertical) fixedLastYOffset else fixedLastXOffset
@@ -208,7 +208,7 @@ internal class PagesLoader(private val pdfView: PDFView) {
                         )
                     ) / rowHeight
                 ).roundToInt()
-                range.leftTop.col = floor(min(pageFirstXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
+                range.leftTop.col = floor(max(pageFirstXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
 
                 range.rightBottom.row = ceil(
                     abs(
@@ -218,7 +218,7 @@ internal class PagesLoader(private val pdfView: PDFView) {
                         )
                     ) / rowHeight
                 ).roundToInt()
-                range.rightBottom.col = floor(min(pageLastXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
+                range.rightBottom.col = floor(max(pageLastXOffset - secondaryOffset, 0f) / colWidth).roundToInt()
             } else {
                 range.leftTop.col = floor(
                     abs(
@@ -228,7 +228,7 @@ internal class PagesLoader(private val pdfView: PDFView) {
                         )
                     ) / colWidth
                 ).roundToInt()
-                range.leftTop.row = floor(min(pageFirstYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
+                range.leftTop.row = floor(max(pageFirstYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
 
                 range.rightBottom.col = floor(
                     abs(
@@ -238,7 +238,7 @@ internal class PagesLoader(private val pdfView: PDFView) {
                         )
                     ) / colWidth
                 ).roundToInt()
-                range.rightBottom.row = floor(min(pageLastYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
+                range.rightBottom.row = floor(max(pageLastYOffset - secondaryOffset, 0f) / rowHeight).roundToInt()
             }
 
             renderRanges.add(range)
@@ -278,8 +278,12 @@ internal class PagesLoader(private val pdfView: PDFView) {
     }
 
     private fun loadPage(
-        page: Int, firstRow: Int, lastRow: Int, firstCol: Int, lastCol: Int,
-        nbOfPartsLoadable: Int
+        page: Int,
+        firstRow: Int,
+        lastRow: Int,
+        firstCol: Int,
+        lastCol: Int,
+        nbOfPartsLoadable: Int,
     ): Int {
         var loaded = 0
         for (row in firstRow..lastRow) {
@@ -349,8 +353,8 @@ internal class PagesLoader(private val pdfView: PDFView) {
 
     fun loadPages() {
         cacheOrder = 1
-        xOffset = -max(pdfView.currentXOffset, 0f)
-        yOffset = -max(pdfView.currentYOffset, 0f)
+        xOffset = -min(pdfView.currentXOffset, 0f)
+        yOffset = -min(pdfView.currentYOffset, 0f)
 
         loadVisible()
     }
