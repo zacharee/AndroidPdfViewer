@@ -19,7 +19,7 @@
 package com.github.barteksc.pdfviewer.util
 
 import android.util.SizeF
-import io.legere.pdfiumandroid.util.Size
+import io.legere.pdfiumandroid.api.Size
 import kotlin.math.floor
 
 class PageSizeCalculator(

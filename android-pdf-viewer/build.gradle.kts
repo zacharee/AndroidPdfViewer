@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         namespace = "com.github.barteksc.pdfviewer"
-        minSdk = 23
+        minSdk = 24
         lint.targetSdk = 36
     }
 

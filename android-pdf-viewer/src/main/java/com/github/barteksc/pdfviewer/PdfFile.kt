@@ -18,8 +18,6 @@
  */
 package com.github.barteksc.pdfviewer
 
-import android.graphics.Bitmap
-import android.graphics.Rect
 import android.graphics.RectF
 import android.util.SizeF
 import com.github.barteksc.pdfviewer.exception.PageRenderingException
@@ -27,7 +25,10 @@ import com.github.barteksc.pdfviewer.util.FitPolicy
 import com.github.barteksc.pdfviewer.util.PageSizeCalculator
 import io.legere.pdfiumandroid.PdfDocument
 import io.legere.pdfiumandroid.PdfPage
-import io.legere.pdfiumandroid.util.Size
+import io.legere.pdfiumandroid.api.Bookmark
+import io.legere.pdfiumandroid.api.Link
+import io.legere.pdfiumandroid.api.Meta
+import io.legere.pdfiumandroid.api.Size
 import kotlin.math.max
 
 internal class PdfFile(
@@ -94,9 +95,15 @@ internal class PdfFile(
 
     private fun setup(viewSize: Size) {
         for (i in 0..<pagesCount) {
-            val pageSize = pdfDocument.openPage(documentPage(i)).use { page ->
-                page.getPageSize(density)
+            val documentIndex = documentPage(i)
+            val pageSize = pdfDocument.openPage(documentIndex).use { page ->
+                page?.getPageSize(density)
             }
+
+            if (pageSize == null) {
+                throw IllegalStateException("Unable to open page, pageIndex=${documentIndex}, index=$i")
+            }
+
             if (pageSize.width > originalMaxWidthPageSize.width) {
                 originalMaxWidthPageSize = pageSize
             }
@@ -271,7 +278,8 @@ internal class PdfFile(
 
         synchronized(lock) {
             return openedPages[docPage] ?: try {
-                val page = pdfDocument.openPage(docPage)
+                val page = pdfDocument.openPage(docPage) ?:
+                        throw IllegalStateException("Unable to open page pageIndex=$docPage, index=$pageIndex")
                 openedPages[docPage] = page
                 page
             } catch (e: Exception) {
@@ -292,17 +300,17 @@ internal class PdfFile(
         return !openedPages.containsKey(docPage)
     }
 
-    val metaData: PdfDocument.Meta
+    val metaData: Meta
         get() {
             return pdfDocument.getDocumentMeta()
         }
 
-    val bookmarks: List<PdfDocument.Bookmark>
+    val bookmarks: List<Bookmark>
         get() {
             return pdfDocument.getTableOfContents()
         }
 
-    fun getPageLinks(pageIndex: Int): List<PdfDocument.Link> {
+    fun getPageLinks(pageIndex: Int): List<Link> {
         return getOrOpenPage(pageIndex).getPageLinks()
     }
 

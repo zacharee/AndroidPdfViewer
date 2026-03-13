@@ -61,9 +61,9 @@ import com.github.barteksc.pdfviewer.util.SnapEdge
 import com.github.barteksc.pdfviewer.util.Util.getDP
 import io.legere.pdfiumandroid.PdfDocument
 import io.legere.pdfiumandroid.PdfiumCore
-import io.legere.pdfiumandroid.util.AlreadyClosedBehavior
-import io.legere.pdfiumandroid.util.Config
-import io.legere.pdfiumandroid.util.Size
+import io.legere.pdfiumandroid.api.AlreadyClosedBehavior
+import io.legere.pdfiumandroid.api.Config
+import io.legere.pdfiumandroid.api.Size
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
