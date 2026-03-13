@@ -19,7 +19,7 @@
 package com.github.barteksc.pdfviewer.model
 
 import android.graphics.RectF
-import io.legere.pdfiumandroid.PdfDocument
+import io.legere.pdfiumandroid.api.Link
 
 class LinkTapEvent(
     val originalX: Float,
@@ -27,5 +27,5 @@ class LinkTapEvent(
     val documentX: Float,
     val documentY: Float,
     val mappedLinkRect: RectF,
-    val link: PdfDocument.Link,
+    val link: Link,
 )
