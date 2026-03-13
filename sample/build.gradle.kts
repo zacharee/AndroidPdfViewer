@@ -19,14 +19,6 @@ android {
         versionName = "3.0.0"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = true
-            isDebuggable = true
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
-        }
-    }
-
     compileOptions {
         sourceCompatibility = JavaVersion.toVersion(javaVersion.target)
         targetCompatibility = JavaVersion.toVersion(javaVersion.target)
