@@ -1,9 +1,8 @@
-import org.gradle.kotlin.dsl.get
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.androidLibrary)
-    id("maven-publish")
+    alias(libs.plugins.maven.publish)
 }
 
 val javaVersion: JvmTarget by rootProject.extra
@@ -27,33 +26,11 @@ android {
             jvmTarget.set(javaVersion)
         }
     }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-        }
-    }
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(javaVersion.target)
-    }
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("release") {
-            val libraryVersion: String by rootProject.extra
-
-            groupId = "com.github.zacharee"
-            artifactId = "AndroidPdfViewer"
-            version = libraryVersion
-
-            afterEvaluate {
-                from(components["release"])
-            }
-        }
     }
 }
 

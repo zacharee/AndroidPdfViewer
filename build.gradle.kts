@@ -6,4 +6,5 @@ val javaVersion by extra(JvmTarget.JVM_21)
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.maven.publish) apply false
 }

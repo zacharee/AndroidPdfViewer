@@ -6,6 +6,7 @@ desugar_jdk_libs = "2.1.5"
 kotlin = "2.3.10"
 kotlinxCoroutinesAndroid = "1.10.2"
 pdfiumandroid = "2.0.0"
+mavenPublish = "0.36.0"
 
 [libraries]
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
@@ -18,3 +19,4 @@ pdfiumandroid = { module = "io.legere:pdfiumandroid", version.ref = "pdfiumandro
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
