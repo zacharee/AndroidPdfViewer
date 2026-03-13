@@ -1,3 +1,8 @@
+# 5.0.0
+* Update to PdfiumAndroidKt 2.0.0. This is a breaking change.
+* Allow listener interfaces to be implemented as lambdas.
+* Add to Maven Central.
+
 # 4.0.3
 * Update to Java 21.
 * Bump `minSdkVersion` to 23.
