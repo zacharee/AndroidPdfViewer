@@ -2,7 +2,6 @@ import org.gradle.kotlin.dsl.get
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.androidLibrary)
     id("maven-publish")
 }

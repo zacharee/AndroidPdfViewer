@@ -1,5 +1,5 @@
 [versions]
-agp = '8.11.2'
+agp = '9.1.0'
 appcompat = "1.7.1"
 coreKtx = "1.18.0"
 desugar_jdk_libs = "2.1.5"
@@ -18,4 +18,3 @@ pdfiumandroid = { module = "io.legere:pdfiumandroid", version.ref = "pdfiumandro
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
-kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
