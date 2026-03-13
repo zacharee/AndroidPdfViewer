@@ -4,23 +4,12 @@ This fork was made in order to migrate the library to AndroidX and switch to Pdf
 
 Pull requests will be monitored for new features, but very little proactive maintenance will be done.
 
-[![Release](https://jitpack.io/v/zacharee/AndroidPdfViewer.svg)](https://jitpack.io/#zacharee/AndroidPdfViewer)
-
-Add to _build.gradle_:
-
-```groovy
-allprojects {
-    repositories {
-        ...
-        maven { url 'https://jitpack.io' }
-    }
-}
-```
+![Maven Central Version](https://img.shields.io/maven-central/v/dev.zwander/pdfviewer)
 
 Add the dependency
 
 ```groovy
-implementation 'com.github.zacharee:AndroidPdfViewer:Tag'
+implementation 'dev.zwander:pdfviewer:Version'
 ```
 
 Consider also depending directly on [PdfiumAndroidKt](https://github.com/johngray1965/PdfiumAndroidKt) in order to stay
