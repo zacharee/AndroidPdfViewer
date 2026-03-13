@@ -62,7 +62,10 @@ import com.github.barteksc.pdfviewer.util.Util.getDP
 import io.legere.pdfiumandroid.PdfDocument
 import io.legere.pdfiumandroid.PdfiumCore
 import io.legere.pdfiumandroid.api.AlreadyClosedBehavior
+import io.legere.pdfiumandroid.api.Bookmark
 import io.legere.pdfiumandroid.api.Config
+import io.legere.pdfiumandroid.api.Link
+import io.legere.pdfiumandroid.api.Meta
 import io.legere.pdfiumandroid.api.Size
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -1243,7 +1246,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
         return renderDuringScale
     }
 
-    val documentMeta: PdfDocument.Meta?
+    val documentMeta: Meta?
         /**
          * Returns null if document is not loaded
          */
@@ -1251,7 +1254,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
             return pdfFile?.metaData
         }
 
-    val tableOfContents: List<PdfDocument.Bookmark>
+    val tableOfContents: List<Bookmark>
         /**
          * Will be empty until document is loaded
          */
@@ -1262,7 +1265,7 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
     /**
      * Will be empty until document is loaded
      */
-    fun getLinks(page: Int): List<PdfDocument.Link> {
+    fun getLinks(page: Int): List<Link> {
         return pdfFile?.getPageLinks(page) ?: listOf()
     }
 

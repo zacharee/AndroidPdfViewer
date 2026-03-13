@@ -30,6 +30,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -40,6 +41,7 @@ import com.github.barteksc.pdfviewer.listener.OnPageErrorListener
 import com.github.barteksc.pdfviewer.scroll.DefaultScrollHandle
 import com.github.barteksc.pdfviewer.util.FitPolicy
 import io.legere.pdfiumandroid.PdfDocument
+import io.legere.pdfiumandroid.api.Bookmark
 
 class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadCompleteListener, OnPageErrorListener {
     private lateinit var pdfView: PDFView
@@ -49,6 +51,13 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
     private var pageNumber = 0
 
     private var pdfFileName: String? = null
+
+    private val getContentLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let {
+            this.uri = uri
+            displayFromUri(uri)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,10 +107,8 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
     }
 
     fun launchPicker() {
-        val intent = Intent(Intent.ACTION_GET_CONTENT)
-        intent.setType("application/pdf")
         try {
-            startActivityForResult(intent, REQUEST_CODE)
+            getContentLauncher.launch("application/pdf")
         } catch (_: ActivityNotFoundException) {
             //alert user that file manager not working
             Toast.makeText(this, R.string.toast_pick_file_error, Toast.LENGTH_SHORT).show()
@@ -160,19 +167,6 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
             .load()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        onResult(resultCode, data!!)
-    }
-
-    fun onResult(resultCode: Int, intent: Intent) {
-        if (resultCode == RESULT_OK) {
-            uri = intent.data
-            displayFromUri(uri!!)
-        }
-    }
-
     override fun onPageChanged(page: Int, pageCount: Int) {
         pageNumber = page
         setTitle(String.format("%s %s / %s", pdfFileName, page + 1, pageCount))
@@ -211,7 +205,7 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
         printBookmarksTree(pdfView.tableOfContents, "-")
     }
 
-    fun printBookmarksTree(tree: List<PdfDocument.Bookmark>, sep: String) {
+    fun printBookmarksTree(tree: List<Bookmark>, sep: String) {
         for (b in tree) {
             Log.e(TAG, String.format("%s %s, p %d", sep, b.title, b.pageIdx))
 
@@ -247,7 +241,6 @@ class PDFViewActivity : AppCompatActivity(), OnPageChangeListener, OnLoadComplet
     companion object {
         private val TAG: String = PDFViewActivity::class.java.getSimpleName()
 
-        private const val REQUEST_CODE = 42
         const val PERMISSION_CODE: Int = 42042
 
         const val SAMPLE_FILE: String = "sample.pdf"
