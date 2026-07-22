@@ -40,6 +40,11 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
     private val renderBounds = RectF()
     private val roundedRenderBounds = Rect()
     private val renderMatrix = Matrix()
+
+    // Read on this Handler's own thread inside handleMessage(), written from the main
+    // thread by start()/stop(); @Volatile ensures the writer's value is visible without
+    // requiring a message round-trip.
+    @Volatile
     private var running = false
 
     fun addRenderingTask(

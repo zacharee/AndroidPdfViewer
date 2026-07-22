@@ -494,8 +494,19 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
             scrollHandle?.destroyLayout()
         }
 
-        pdfFile?.dispose()
+        val pdfFileToDispose = pdfFile
         pdfFile = null
+
+        val handler = renderingHandler
+        if (pdfFileToDispose != null) {
+            if (handler != null) {
+                // Post onto the renderer thread so dispose() runs after any proceed()
+                // call already mid-flight there, instead of racing it from the main thread.
+                handler.post { pdfFileToDispose.dispose() }
+            } else {
+                pdfFileToDispose.dispose()
+            }
+        }
 
         renderingHandler = null
         scrollHandle = null
