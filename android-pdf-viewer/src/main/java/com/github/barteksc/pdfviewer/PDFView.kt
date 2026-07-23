@@ -494,8 +494,20 @@ open class PDFView(context: Context?, set: AttributeSet?) : RelativeLayout(conte
             scrollHandle?.destroyLayout()
         }
 
-        pdfFile?.dispose()
+        val pdfFileToDispose = pdfFile
         pdfFile = null
+        val handler = renderingHandler
+        if (pdfFileToDispose != null) {
+            if (handler != null) {
+                // A render may still be in flight on the renderer thread; the stop()
+                // above only drops queued work. Post disposal there so it runs after
+                // the render instead of freeing the document under it (crash in pdfium).
+                // quitSafely() still drains this on teardown.
+                handler.post { pdfFileToDispose.dispose() }
+            } else {
+                pdfFileToDispose.dispose()
+            }
+        }
 
         renderingHandler = null
         scrollHandle = null

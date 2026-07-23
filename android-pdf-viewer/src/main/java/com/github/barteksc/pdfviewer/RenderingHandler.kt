@@ -40,6 +40,9 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
     private val renderBounds = RectF()
     private val roundedRenderBounds = Rect()
     private val renderMatrix = Matrix()
+
+    // Written on the main thread (start()/stop()), read on the renderer thread.
+    @Volatile
     private var running = false
 
     fun addRenderingTask(
@@ -84,7 +87,12 @@ internal class RenderingHandler(looper: Looper, private val pdfView: PDFView) : 
 
     @Throws(PageRenderingException::class)
     private fun proceed(renderingTask: RenderingTask): PagePart? {
-        val pdfFile = pdfView.pdfFile ?: return null
+        // The document may have been cleared / the handler stopped from the main
+        // thread while this task sat in the queue — bail instead of touching it.
+        val pdfFile = pdfView.pdfFile
+        if (pdfFile == null || !running) {
+            return null
+        }
         val page = pdfFile.getOrOpenPage(renderingTask.page)
 
         val w = renderingTask.width.roundToInt()
